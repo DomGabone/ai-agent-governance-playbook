@@ -1,0 +1,64 @@
+name: seguranca
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  segredos:
+    name: Varredura de segredos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  padroes-perigosos:
+    name: Padroes perigosos no cliente
+    runs-on: ubuntu-latest
+    env:
+      CLIENT_DIR: lib
+      DATA_LAYER_REGEX: 'lib/(data|core/backend)/'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Chave de servico no cliente
+        run: |
+          if grep -rIn "service_role\|SERVICE_ROLE" "$CLIENT_DIR" 2>/dev/null; then
+            echo "::error::Referencia a chave de servico encontrada no codigo do cliente."
+            exit 1
+          fi
+      - name: Cliente de backend fora da camada de dados
+        run: |
+          if grep -rIl "BackendClient\.instance" "$CLIENT_DIR" 2>/dev/null | grep -vE "$DATA_LAYER_REGEX"; then
+            echo "::error::Cliente de backend usado fora da camada de dados."
+            exit 1
+          fi
+      - name: Arquivo de ambiente versionado
+        run: |
+          if git ls-files | grep -E '(^|/)\.env(\..*)?$'; then
+            echo "::error::Arquivo de ambiente versionado."
+            exit 1
+          fi
+
+  qualidade:
+    name: Formatacao, analise e testes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: flutter analyze --fatal-infos
+      - run: flutter test

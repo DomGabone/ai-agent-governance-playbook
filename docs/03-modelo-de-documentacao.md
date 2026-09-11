@@ -32,7 +32,7 @@ Pode haver vários documentos de análise, mas a lista do que falta fazer é uma
 
 ## Estrutura sugerida
 
-```
+```text
 docs/
   MAPA.md                     índice único
   REGISTRO_DE_DECISOES.md     ver documento 02

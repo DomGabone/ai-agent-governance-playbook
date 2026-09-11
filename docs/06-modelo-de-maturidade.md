@@ -57,7 +57,7 @@ Armadilha comum: confundir "o provedor faz backup" com "eu consigo restaurar".
 
 ## Exemplo de retrato
 
-```
+```text
 Marcaí, 2026-06
 Eixo A: A1  (assinado, mas sem contas de loja)
 Eixo B: B2  (nenhuma promessa falsa; integrações reais só para notificação)
